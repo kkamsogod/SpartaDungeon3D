@@ -6,17 +6,19 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed;
+    public float runSpeed;
     public float jumpPower;
-    private Vector2 curMovementInput;
+    private Vector2 _curMovementInput;
+    private bool isRunning;
     public LayerMask groundLayerMask;
 
     [Header("Look")]
     public Transform cameraContainer;
     public float minXLook;
     public float maxXLook;
-    private float camCurXRot;
+    private float _camCurXRot;
     public float lookSensitivity;
-    private Vector2 mouseDelta;
+    private Vector2 _mouseDelta;
     public bool canLook = true;
 
     public Action inventory;
@@ -27,11 +29,12 @@ public class PlayerController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    void Start()
+    private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
     }
-    void FixedUpdate()
+
+    private void FixedUpdate()
     {
         Move();
     }
@@ -44,39 +47,40 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Move()
+    private void Move()
     {
-        Vector3 dir = transform.forward * curMovementInput.y + transform.right * curMovementInput.x;
-        dir *= moveSpeed;
+        float currentSpeed = isRunning ? runSpeed : moveSpeed;
+        Vector3 dir = transform.forward * _curMovementInput.y + transform.right * _curMovementInput.x;
+        dir *= currentSpeed;
         dir.y = _rigidbody.velocity.y;
 
         _rigidbody.velocity = dir;
     }
 
-    void CameraLook()
+    private void CameraLook()
     {
-        camCurXRot += mouseDelta.y * lookSensitivity;
-        camCurXRot = Mathf.Clamp(camCurXRot, minXLook, maxXLook);
-        cameraContainer.localEulerAngles = new Vector3(-camCurXRot, 0, 0);
+        _camCurXRot += _mouseDelta.y * lookSensitivity;
+        _camCurXRot = Mathf.Clamp(_camCurXRot, minXLook, maxXLook);
+        cameraContainer.localEulerAngles = new Vector3(-_camCurXRot, 0, 0);
 
-        transform.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
+        transform.eulerAngles += new Vector3(0, _mouseDelta.x * lookSensitivity, 0);
     }
 
     public void OnMove(InputAction.CallbackContext context)
     {
         if (context.phase == InputActionPhase.Performed)
         {
-            curMovementInput = context.ReadValue<Vector2>();
+            _curMovementInput = context.ReadValue<Vector2>();
         }
         else if (context.phase == InputActionPhase.Canceled)
         {
-            curMovementInput = Vector2.zero;
+            _curMovementInput = Vector2.zero;
         }
     }
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        mouseDelta = context.ReadValue<Vector2>();
+        _mouseDelta = context.ReadValue<Vector2>();
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -87,7 +91,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    bool IsGrounded()
+    private bool IsGrounded()
     {
         Ray[] rays = new Ray[4]
         {
@@ -117,10 +121,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void ToggleCursor()
+    private void ToggleCursor()
     {
         bool toggle = Cursor.lockState == CursorLockMode.Locked;
         Cursor.lockState = toggle ? CursorLockMode.None : CursorLockMode.Locked;
         canLook = !toggle;
+    }
+
+    public void OnRun(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Performed)
+        {
+            isRunning = true;
+        }
+        else if (context.phase == InputActionPhase.Canceled)
+        {
+            isRunning = false;
+        }
     }
 }
