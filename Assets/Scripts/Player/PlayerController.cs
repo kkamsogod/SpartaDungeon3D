@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +21,13 @@ public class PlayerController : MonoBehaviour
     public float lookSensitivity;
     private Vector2 _mouseDelta;
     public bool canLook = true;
+
+    [Header("Effects")]
+    public float speedMultiplier = 1f;
+    public bool enableDoubleJump = false;
+    public bool isInvincible = false;
+
+    private bool canDoubleJump = false;
 
     public Action inventory;
     private Rigidbody _rigidbody;
@@ -49,7 +57,7 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
-        float currentSpeed = isRunning ? runSpeed : moveSpeed;
+        float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
         Vector3 dir = transform.forward * _curMovementInput.y + transform.right * _curMovementInput.x;
         dir *= currentSpeed;
         dir.y = _rigidbody.velocity.y;
@@ -85,9 +93,19 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.phase == InputActionPhase.Started && IsGrounded())
+        if (context.phase == InputActionPhase.Started)
         {
-            _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
+            if (IsGrounded())
+            {
+                _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
+                canDoubleJump = true;
+            }
+            else if (enableDoubleJump && canDoubleJump)
+            {
+                _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
+                _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
+                canDoubleJump = false;
+            }
         }
     }
 
@@ -138,5 +156,47 @@ public class PlayerController : MonoBehaviour
         {
             isRunning = false;
         }
+    }
+
+    public void StartSpeedBoost(float multiplier, float duration)
+    {
+        StartCoroutine(ApplySpeedBoost(multiplier, duration));
+    }
+
+    public void StartDoubleJump(float duration)
+    {
+        StartCoroutine(ApplyDoubleJump(duration));
+    }
+
+    public void StartInvincibility(float duration)
+    {
+        StartCoroutine(ApplyInvincibility(duration));
+    }
+
+    private IEnumerator ApplySpeedBoost(float speedMultiplier, float duration)
+    {
+        Debug.Log("Speed Boost Activated");
+        moveSpeed *= speedMultiplier;
+        yield return new WaitForSeconds(duration);
+        moveSpeed /= speedMultiplier;
+        Debug.Log("Speed Boost Deactivated");
+    }
+
+    private IEnumerator ApplyDoubleJump(float duration)
+    {
+        Debug.Log("Double Jump Activated");
+        enableDoubleJump = true;
+        yield return new WaitForSeconds(duration);
+        enableDoubleJump = false;
+        Debug.Log("Double Jump Deactivated");
+    }
+
+    private IEnumerator ApplyInvincibility(float duration)
+    {
+        Debug.Log("Invincibility Activated");
+        isInvincible = true;
+        yield return new WaitForSeconds(duration);
+        isInvincible = false;
+        Debug.Log("Invincibility Deactivated");
     }
 }

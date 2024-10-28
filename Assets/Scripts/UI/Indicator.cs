@@ -8,6 +8,7 @@ public class Indicator : MonoBehaviour
     public float FlashSpeed;
 
     private Coroutine Coroutine;
+    private bool isDamageFlashActive;
 
     void Start()
     {
@@ -17,12 +18,16 @@ public class Indicator : MonoBehaviour
 
     public void FlashDamage()
     {
-        Flash(new Color(1f, 0.5f, 0.2f));
+        isDamageFlashActive = true;
+        Flash(new Color(0.8f, 0.1f, 0.1f));
     }
 
     public void FlashWarm()
     {
-        Flash(new Color(0.2f, 0.8f, 1f));
+        if (!isDamageFlashActive)
+        {
+            Flash(new Color(0.2f, 0.8f, 1f));
+        }
     }
 
     private void Flash(Color color)
@@ -34,6 +39,7 @@ public class Indicator : MonoBehaviour
 
         Image.enabled = true;
         Image.color = color;
+
         Coroutine = StartCoroutine(FadeAway(color));
     }
 
@@ -50,5 +56,6 @@ public class Indicator : MonoBehaviour
         }
 
         Image.enabled = false;
+        isDamageFlashActive = false;
     }
 }

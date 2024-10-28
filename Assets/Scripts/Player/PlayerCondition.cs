@@ -58,20 +58,9 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
         thirst.Add(amount);
     }
 
-    public void Warm(float amount)
-    {
-        cold.Add(amount);
-    }
-
     private void Die()
     {
         // 아직 구현 안함
-    }
-
-    public void TakePhysicalDamage(int damageAmount)
-    {
-        health.Subtract(damageAmount);
-        OnTakeDamage?.Invoke();
     }
 
     public void HeatUp(int heatUPAmount)
@@ -80,6 +69,17 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
         OnWarmHeal?.Invoke();
     }
 
+    public void StaminaUp(float amount)
+    {
+        stamina.Add(amount);
+    }
+
+    public void TakePhysicalDamage(int damageAmount)
+    {
+        health.Subtract(damageAmount);
+        OnTakeDamage?.Invoke();
+    }
+    
     public bool UseStamina(float amount)
     {
         if (stamina.curValue - amount < 0f)

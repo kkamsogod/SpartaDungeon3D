@@ -15,9 +15,15 @@ MonoBehaviour:
   displayName: "\uB2E8\uAC80"
   description: "\uACF5\uACA9\uC6A9 \uB2E8\uAC80\uC774\uB2E4."
   type: 1
-  icon: {fileID: 0}
-  dropPrefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0be65d09682ad2749972f71316c1a53a, type: 3}
+  dropPrefab: {fileID: 5257037049487284231, guid: 37a01182f85d3fb4dab745236d9c042c, type: 3}
   canStack: 0
   maxStackAmount: 0
   consumables: []
   equipPrefab: {fileID: 0}
+  isCraftable: 1
+  requiredMaterials:
+  - material: {fileID: 11400000, guid: 79f311b4f862e2c4fa587db8bc40045e, type: 2}
+    quantity: 7
+  - material: {fileID: 11400000, guid: 11052a81860892048833a4c21c131c07, type: 2}
+    quantity: 3

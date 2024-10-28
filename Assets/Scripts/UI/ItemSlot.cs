@@ -6,11 +6,12 @@ public class ItemSlot : MonoBehaviour
 {
     public ItemData item;
 
-    public UIInventory inventory;
     public Button button;
     public Image icon;
     public TextMeshProUGUI quatityText;
     private Outline outline;
+
+    public UIInventory inventory;
 
     public int index;
     public bool equipped;

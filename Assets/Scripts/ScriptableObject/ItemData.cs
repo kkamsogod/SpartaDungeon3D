@@ -1,23 +1,37 @@
 using UnityEngine;
+using System;
 
 public enum ItemType
 {
     Resource,
     Equipable,
-    Consumable
+    Consumable,
+    Structure
 }
 
 public enum ConsumableType
 {
     Hunger,
-    Health
+    Health,
+    Stamina,
+    SpeedBoost,
+    DoubleJump,
+    Invincibility
 }
 
-[System.Serializable]
+[Serializable]
 public class ItemDataConsumable
 {
     public ConsumableType type;
     public float value;
+    public float duration;
+}
+
+[Serializable]
+public class CraftingMaterial
+{
+    public ItemData material;
+    public int quantity;
 }
 
 [CreateAssetMenu(fileName = "Item", menuName = "New Item")]
@@ -40,4 +54,8 @@ public class ItemData : ScriptableObject
 
     [Header("Equip")]
     public GameObject equipPrefab;
+
+    [Header("Crafting")]
+    public bool isCraftable;
+    public CraftingMaterial[] requiredMaterials;
 }

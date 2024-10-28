@@ -1,32 +1,34 @@
-using TMPro;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class UIInventory : MonoBehaviour
 {
-    public ItemSlot[] slots;
+    public ItemSlot[] inventorySlots;
+    public ItemSlot[] quickSlots;
 
-    public GameObject inventoryWindow;
-    public Transform slotPanel;
+    public GameObject inventoryCanvas;
+    public GameObject quickSlotCanvas;
+    public Transform inventorySlotPanel;
+    public Transform quickSlotPanel;
     public Transform dropPosition;
 
-    [Header("Selected Item")]
-    private ItemSlot selectedItem;
-    private int selectedItemIndex;
-    public TextMeshProUGUI selectedItemName;
-    public TextMeshProUGUI selectedItemDescription;
-    public TextMeshProUGUI selectedItemStatName;
-    public TextMeshProUGUI selectedItemStatValue;
+    [Header("Select Item")]
     public GameObject useButton;
     public GameObject equipButton;
-    public GameObject unEquipButton;
+    public GameObject unequipButton;
     public GameObject dropButton;
-
-    private int curEquipIndex;
+    public GameObject craftButton;
 
     private PlayerController controller;
     private PlayerCondition condition;
+
+    ItemData selectedItem;
+    int selectedItemIndex = 0;
+
+    int curEquipIndex;
+
+    private Coroutine Coroutine;
 
     void Start()
     {
@@ -37,40 +39,84 @@ public class UIInventory : MonoBehaviour
         controller.inventory += Toggle;
         CharacterManager.Instance.Player.addItem += AddItem;
 
-        inventoryWindow.SetActive(false);
-        slots = new ItemSlot[slotPanel.childCount];
-
-        for (int i = 0; i < slots.Length; i++)
+        if (inventorySlotPanel != null)
         {
-            slots[i] = slotPanel.GetChild(i).GetComponent<ItemSlot>();
-            slots[i].index = i;
-            slots[i].inventory = this;
-            slots[i].Clear();
+            inventorySlots = new ItemSlot[inventorySlotPanel.childCount];
+            for (int i = 0; i < inventorySlots.Length; i++)
+            {
+                inventorySlots[i] = inventorySlotPanel.GetChild(i).GetComponent<ItemSlot>();
+                inventorySlots[i].index = i;
+                inventorySlots[i].inventory = this;
+            }
+        }
+        
+        if (quickSlotPanel != null)
+        {
+            quickSlots = new ItemSlot[quickSlotPanel.childCount];
+            for (int i = 0; i < quickSlots.Length; i++)
+            {
+                quickSlots[i] = quickSlotPanel.GetChild(i).GetComponent<ItemSlot>();
+                quickSlots[i].index = i;
+                quickSlots[i].inventory = this;
+            }
         }
 
+        inventoryCanvas.SetActive(false);
+        quickSlotCanvas.SetActive(true);
+
         ClearSelectedItemWindow();
+        UpdateInventorySlots();
+        UpdateQuickSlots();
+    }
+
+    void Update()
+    {
+        for (int i = 0; i < quickSlots.Length; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                UseQuickSlotItem(i);
+            }
+        }
+    }
+
+    void ClearSelectedItemWindow()
+    {
+        useButton.SetActive(false);
+        equipButton.SetActive(false);
+        unequipButton.SetActive(false);
+        dropButton.SetActive(false);
+        craftButton.SetActive(false);
     }
 
     public void Toggle()
     {
-        if (inventoryWindow.activeInHierarchy)
+        if (IsOpen())
         {
-            inventoryWindow.SetActive(false);
+            inventoryCanvas.SetActive(false);
+            quickSlotCanvas.SetActive(true);
         }
         else
         {
-            inventoryWindow.SetActive(true);
+            inventoryCanvas.SetActive(true);
+            quickSlotCanvas.SetActive(false);
         }
     }
 
     public bool IsOpen()
     {
-        return inventoryWindow.activeInHierarchy;
+        return inventoryCanvas.activeInHierarchy;
     }
 
-    public void AddItem()
+    void AddItem()
     {
         ItemData data = CharacterManager.Instance.Player.itemData;
+
+        if (data == null)
+        {
+            Debug.LogError("ItemData is null.");
+            return;
+        }
 
         if (data.canStack)
         {
@@ -78,7 +124,8 @@ public class UIInventory : MonoBehaviour
             if (slot != null)
             {
                 slot.quantity++;
-                UpdateUI();
+                UpdateInventorySlots();
+                UpdateQuickSlots();
                 CharacterManager.Instance.Player.itemData = null;
                 return;
             }
@@ -90,7 +137,8 @@ public class UIInventory : MonoBehaviour
         {
             emptySlot.item = data;
             emptySlot.quantity = 1;
-            UpdateUI();
+            UpdateInventorySlots();
+            UpdateQuickSlots();
             CharacterManager.Instance.Player.itemData = null;
             return;
         }
@@ -99,33 +147,52 @@ public class UIInventory : MonoBehaviour
         CharacterManager.Instance.Player.itemData = null;
     }
 
-    public void ThrowItem(ItemData data)
+    void UpdateInventorySlots()
     {
-        Instantiate(data.dropPrefab, dropPosition.position, Quaternion.Euler(Vector3.one * Random.value * 360));
-    }
-
-    public void UpdateUI()
-    {
-        for (int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < inventorySlots.Length; i++)
         {
-            if (slots[i].item != null)
+            if (inventorySlots[i].item != null)
             {
-                slots[i].Set();
+                inventorySlots[i].Set();
             }
             else
             {
-                slots[i].Clear();
+                inventorySlots[i].Clear();
             }
+        }
+    }
+
+    void UpdateQuickSlots()
+    {
+        int quickSlotIndex = 0;
+
+        for (int i = 0; i < inventorySlots.Length; i++)
+        {
+            if (inventorySlots[i].item != null && inventorySlots[i].item.type != ItemType.Resource && inventorySlots[i].item.type != ItemType.Structure)
+            {
+                if (quickSlotIndex < quickSlots.Length)
+                {
+                    quickSlots[quickSlotIndex].item = inventorySlots[i].item;
+                    quickSlots[quickSlotIndex].quantity = inventorySlots[i].quantity;
+                    quickSlots[quickSlotIndex].Set();
+                    quickSlotIndex++;
+                }
+            }
+        }
+
+        for (int i = quickSlotIndex; i < quickSlots.Length; i++)
+        {
+            quickSlots[i].Clear();
         }
     }
 
     ItemSlot GetItemStack(ItemData data)
     {
-        for (int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < inventorySlots.Length; i++)
         {
-            if (slots[i].item == data && slots[i].quantity < data.maxStackAmount)
+            if (inventorySlots[i].item == data && inventorySlots[i].quantity < data.maxStackAmount)
             {
-                return slots[i];
+                return inventorySlots[i];
             }
         }
         return null;
@@ -133,118 +200,176 @@ public class UIInventory : MonoBehaviour
 
     ItemSlot GetEmptySlot()
     {
-        for (int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < inventorySlots.Length; i++)
         {
-            if (slots[i].item == null)
+            if (inventorySlots[i].item == null)
             {
-                return slots[i];
+                return inventorySlots[i];
             }
         }
         return null;
     }
 
-    public void SelectItem(int index)
+    void UseQuickSlotItem(int index)
     {
-        if (slots[index].item == null) return;
-
-        selectedItem = slots[index];
-        selectedItemIndex = index;
-
-        selectedItemName.text = selectedItem.item.displayName;
-        selectedItemDescription.text = selectedItem.item.description;
-
-        selectedItemStatName.text = string.Empty;
-        selectedItemStatValue.text = string.Empty;
-
-        for (int i = 0; i < selectedItem.item.consumables.Length; i++)
+        if (quickSlots == null || index >= quickSlots.Length || quickSlots[index].item == null)
         {
-            selectedItemStatName.text += selectedItem.item.consumables[i].type.ToString() + "\n";
-            selectedItemStatValue.text += selectedItem.item.consumables[i].value.ToString() + "\n";
+            Debug.LogWarning("Invalid quick slot index or item is null.");
+            return;
         }
 
-        useButton.SetActive(selectedItem.item.type == ItemType.Consumable);
-        equipButton.SetActive(selectedItem.item.type == ItemType.Equipable && !slots[index].equipped);
-        unEquipButton.SetActive(selectedItem.item.type == ItemType.Equipable && slots[index].equipped);
-        dropButton.SetActive(true);
+        selectedItem = quickSlots[index].item;
+        selectedItemIndex = index;
+
+        if (selectedItem.type == ItemType.Consumable)
+        {
+            OnUseButton();
+        }
+        else if (selectedItem.type == ItemType.Equipable)
+        {
+            if (quickSlots[index].equipped)
+            {
+                OnUnEquipButton();
+            }
+            else
+            {
+                OnEquipButton();
+            }
+        }
     }
 
-    void ClearSelectedItemWindow()
+    void ThrowItem(ItemData data)
     {
-        selectedItem = null;
+        if (dropPosition == null)
+        {
+            Debug.LogError("Drop position is not assigned.");
+            return;
+        }
+        Instantiate(data.dropPrefab, dropPosition.position, Quaternion.Euler(Vector3.one * Random.value * 360));
+    }
 
-        selectedItemName.text = string.Empty;
-        selectedItemDescription.text = string.Empty;
-        selectedItemStatName.text = string.Empty;
-        selectedItemStatValue.text = string.Empty;
+    public void SelectItem(int index)
+    {
+        if (inventorySlots == null || index >= inventorySlots.Length || inventorySlots[index].item == null)
+        {
+            Debug.LogWarning("Invalid slot index or item is null.");
+            return;
+        }
 
-        useButton.SetActive(false);
-        equipButton.SetActive(false);
-        unEquipButton.SetActive(false);
-        dropButton.SetActive(false);
+        selectedItem = inventorySlots[index].item;
+        selectedItemIndex = index;
+
+        useButton.SetActive(selectedItem.type == ItemType.Consumable);
+        equipButton.SetActive(selectedItem.type == ItemType.Equipable && !inventorySlots[index].equipped);
+        unequipButton.SetActive(selectedItem.type == ItemType.Equipable && inventorySlots[index].equipped);
+        dropButton.SetActive(true);
+        craftButton.SetActive(CanCraft(selectedItem));
+    }
+
+    bool CanCraft(ItemData item)
+    {
+        return item != null && item.isCraftable;
+    }
+
+    public void OnCraftButton()
+    {
+        if (selectedItem == null || !selectedItem.isCraftable) return;
+        RemoveSelectedItem();
     }
 
     public void OnUseButton()
     {
-        if (selectedItem.item.type == ItemType.Consumable)
+        if (selectedItem == null || selectedItem.type != ItemType.Consumable) return;
+
+        for (int i = 0; i < selectedItem.consumables.Length; i++)
         {
-            for (int i = 0; i < selectedItem.item.consumables.Length; i++)
+            switch (selectedItem.consumables[i].type)
             {
-                switch (selectedItem.item.consumables[i].type)
-                {
-                    case ConsumableType.Health:
-                        condition.Heal(selectedItem.item.consumables[i].value); break;
-                    case ConsumableType.Hunger:
-                        condition.Eat(selectedItem.item.consumables[i].value); break;
-                }
+                case ConsumableType.Health:
+                    condition.Heal(selectedItem.consumables[i].value);
+                    break;
+                case ConsumableType.Hunger:
+                    condition.Eat(selectedItem.consumables[i].value);
+                    break;
+                case ConsumableType.Stamina:
+                    condition.StaminaUp(selectedItem.consumables[i].value);
+                    break;
+                case ConsumableType.SpeedBoost:
+                    controller.StartSpeedBoost(selectedItem.consumables[i].value, selectedItem.consumables[i].duration);
+                    break;
+                case ConsumableType.DoubleJump:
+                    controller.StartDoubleJump(selectedItem.consumables[i].duration);
+                    break;
+                case ConsumableType.Invincibility:
+                    controller.StartInvincibility(selectedItem.consumables[i].duration);
+                    break;
             }
-            RemoveSelctedItem();
         }
+
+        RemoveSelectedItem();
     }
 
     public void OnDropButton()
     {
-        ThrowItem(selectedItem.item);
-        RemoveSelctedItem();
+        if (selectedItem == null) return;
+        ThrowItem(selectedItem);
+        RemoveSelectedItem();
     }
 
-    void RemoveSelctedItem()
+    void RemoveSelectedItem()
     {
-        selectedItem.quantity--;
+        if (selectedItemIndex < 0) return;
 
-        if (selectedItem.quantity <= 0)
+        ItemSlot slotToRemove;
+        if (selectedItemIndex < inventorySlots.Length)
         {
-            if (slots[selectedItemIndex].equipped)
-            {
-                UnEquip(selectedItemIndex);
-            }
+            slotToRemove = inventorySlots[selectedItemIndex];
+        }
+        else
+        {
+            slotToRemove = quickSlots[selectedItemIndex - inventorySlots.Length];
+        }
 
-            selectedItem.item = null;
+        slotToRemove.quantity--;
+
+        if (slotToRemove.quantity <= 0)
+        {
+            selectedItem = null;
+            slotToRemove.item = null;
+            selectedItemIndex = -1;
             ClearSelectedItemWindow();
         }
 
-        UpdateUI();
+        UpdateInventorySlots();
+        UpdateQuickSlots();
     }
 
     public void OnEquipButton()
     {
-        if (slots[curEquipIndex].equipped)
+        if (selectedItem == null || selectedItem.type != ItemType.Equipable) return;
+
+        if (inventorySlots[curEquipIndex].equipped)
         {
             UnEquip(curEquipIndex);
         }
 
-        slots[selectedItemIndex].equipped = true;
+        inventorySlots[selectedItemIndex].equipped = true;
         curEquipIndex = selectedItemIndex;
-        CharacterManager.Instance.Player.equip.EquipNew(selectedItem.item);
-        UpdateUI();
+        CharacterManager.Instance.Player.equip.EquipNew(selectedItem);
+        UpdateInventorySlots();
+        UpdateQuickSlots();
 
         SelectItem(selectedItemIndex);
     }
 
     void UnEquip(int index)
     {
-        slots[index].equipped = false;
+        if (index < 0 || index >= inventorySlots.Length) return;
+
+        inventorySlots[index].equipped = false;
         CharacterManager.Instance.Player.equip.UnEquip();
-        UpdateUI();
+        UpdateInventorySlots();
+        UpdateQuickSlots();
 
         if (selectedItemIndex == index)
         {
@@ -252,13 +377,8 @@ public class UIInventory : MonoBehaviour
         }
     }
 
-    public void OnUpEquipButton()
+    public void OnUnEquipButton()
     {
         UnEquip(selectedItemIndex);
-    }
-
-    public bool HasItem(ItemData item, int quantity)
-    {
-        return false;
     }
 }
