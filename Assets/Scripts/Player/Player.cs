@@ -5,6 +5,7 @@ public class Player : MonoBehaviour
 {
     public PlayerController controller;
     public PlayerCondition condition;
+    public ItemEffectHandler effectHandler;
     public Equipment equip;
 
     public ItemData itemData;
@@ -17,6 +18,7 @@ public class Player : MonoBehaviour
         CharacterManager.Instance.Player = this;
         controller = GetComponent<PlayerController>();
         condition = GetComponent<PlayerCondition>();
+        effectHandler = GetComponent<ItemEffectHandler>();
         equip = GetComponent<Equipment>();
     }
 }

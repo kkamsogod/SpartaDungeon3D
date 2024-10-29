@@ -10,10 +10,6 @@ public class EquipTool : Equip
     [Header("Resource Gathering")]
     public bool doesGatherResources;
 
-    [Header("Combat")]
-    public bool doesDealDamage;
-    public int damage;
-
     private Animator animator;
     private Camera _camera;
 
@@ -48,15 +44,19 @@ public class EquipTool : Equip
 
         if (Physics.Raycast(ray, out hit, attackDistance))
         {
-            if (doesGatherResources && hit.collider.TryGetComponent(out Resource resource))
+            var equipment = CharacterManager.Instance.Player.equip;
+            Equip equippedItem = equipment.curEquip;
+
+            if (equippedItem == null)
             {
-                resource.Gather(hit.point, hit.normal);
+                Debug.LogWarning("No equipped item found!");
+                return;
             }
 
-            //if (doesDealDamage && hit.collider.TryGetComponent(out NPC npc))
-            //{
-            //    npc.TakePhysicalDamage(damage);
-            //}
+            if (doesGatherResources && hit.collider.TryGetComponent(out Resource resource))
+            {
+                resource.Gather(hit.point, hit.normal, equippedItem.toolType);
+            }
         }
     }
 }

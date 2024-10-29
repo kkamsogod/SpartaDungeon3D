@@ -5,8 +5,7 @@ public enum ItemType
 {
     Resource,
     Equipable,
-    Consumable,
-    Structure
+    Consumable
 }
 
 public enum ConsumableType
@@ -16,7 +15,15 @@ public enum ConsumableType
     Stamina,
     SpeedBoost,
     DoubleJump,
-    Invincibility
+    InfiniteStamina
+}
+
+public enum ResourceToolType
+{
+    None,
+    Tree,
+    Rock,
+    Both
 }
 
 [Serializable]
@@ -25,13 +32,6 @@ public class ItemDataConsumable
     public ConsumableType type;
     public float value;
     public float duration;
-}
-
-[Serializable]
-public class CraftingMaterial
-{
-    public ItemData material;
-    public int quantity;
 }
 
 [CreateAssetMenu(fileName = "Item", menuName = "New Item")]
@@ -54,8 +54,5 @@ public class ItemData : ScriptableObject
 
     [Header("Equip")]
     public GameObject equipPrefab;
-
-    [Header("Crafting")]
-    public bool isCraftable;
-    public CraftingMaterial[] requiredMaterials;
+    public ResourceToolType toolType;
 }

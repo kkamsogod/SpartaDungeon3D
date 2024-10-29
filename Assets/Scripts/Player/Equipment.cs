@@ -27,6 +27,7 @@ public class Equipment : MonoBehaviour
     {
         UnEquip();
         curEquip = Instantiate(data.equipPrefab, equipParent).GetComponent<Equip>();
+        curEquip.toolType = data.toolType;
     }
 
     public void UnEquip()

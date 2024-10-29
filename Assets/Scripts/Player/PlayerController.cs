@@ -22,12 +22,13 @@ public class PlayerController : MonoBehaviour
     private Vector2 _mouseDelta;
     public bool canLook = true;
 
-    [Header("Effects")]
-    public float speedMultiplier = 1f;
-    public bool enableDoubleJump = false;
-    public bool isInvincible = false;
-
+    private float originalSpeed;
     private bool canDoubleJump = false;
+    public bool enableDoubleJump = false;
+
+    [Header("Cost")]
+    public float runStaminaCost;
+    public float jumpStaminaCost;
 
     public Action inventory;
     private Rigidbody _rigidbody;
@@ -35,11 +36,24 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        originalSpeed = moveSpeed;
     }
 
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void Update()
+    {
+        if (isRunning && _curMovementInput != Vector2.zero && IsGrounded())
+        {
+            bool hasEnoughStamina = CharacterManager.Instance.Player.condition.UseStamina(runStaminaCost * Time.deltaTime);
+            if (!hasEnoughStamina)
+            {
+                isRunning = false;
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -57,7 +71,7 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
-        float currentSpeed = (isRunning ? runSpeed : moveSpeed) * speedMultiplier;
+        float currentSpeed = (isRunning ? runSpeed : moveSpeed);
         Vector3 dir = transform.forward * _curMovementInput.y + transform.right * _curMovementInput.x;
         dir *= currentSpeed;
         dir.y = _rigidbody.velocity.y;
@@ -95,12 +109,12 @@ public class PlayerController : MonoBehaviour
     {
         if (context.phase == InputActionPhase.Started)
         {
-            if (IsGrounded())
+            if (IsGrounded() && CharacterManager.Instance.Player.condition.UseStamina(jumpStaminaCost))
             {
                 _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
                 canDoubleJump = true;
             }
-            else if (enableDoubleJump && canDoubleJump)
+            else if (enableDoubleJump && canDoubleJump && CharacterManager.Instance.Player.condition.UseStamina(jumpStaminaCost))
             {
                 _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
                 _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
@@ -150,7 +164,10 @@ public class PlayerController : MonoBehaviour
     {
         if (context.phase == InputActionPhase.Performed)
         {
-            isRunning = true;
+            if (IsGrounded())
+            {
+                isRunning = true;
+            }
         }
         else if (context.phase == InputActionPhase.Canceled)
         {
@@ -158,45 +175,19 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void StartSpeedBoost(float multiplier, float duration)
+    public void SetSpeedMultiplier(float multiplier)
     {
-        StartCoroutine(ApplySpeedBoost(multiplier, duration));
+        moveSpeed = originalSpeed * multiplier;
     }
 
-    public void StartDoubleJump(float duration)
+    public void ResetSpeedMultiplier()
     {
-        StartCoroutine(ApplyDoubleJump(duration));
+        moveSpeed = originalSpeed;
     }
 
-    public void StartInvincibility(float duration)
+    public void EnableDoubleJump(bool enable)
     {
-        StartCoroutine(ApplyInvincibility(duration));
-    }
-
-    private IEnumerator ApplySpeedBoost(float speedMultiplier, float duration)
-    {
-        Debug.Log("Speed Boost Activated");
-        moveSpeed *= speedMultiplier;
-        yield return new WaitForSeconds(duration);
-        moveSpeed /= speedMultiplier;
-        Debug.Log("Speed Boost Deactivated");
-    }
-
-    private IEnumerator ApplyDoubleJump(float duration)
-    {
-        Debug.Log("Double Jump Activated");
-        enableDoubleJump = true;
-        yield return new WaitForSeconds(duration);
-        enableDoubleJump = false;
-        Debug.Log("Double Jump Deactivated");
-    }
-
-    private IEnumerator ApplyInvincibility(float duration)
-    {
-        Debug.Log("Invincibility Activated");
-        isInvincible = true;
-        yield return new WaitForSeconds(duration);
-        isInvincible = false;
-        Debug.Log("Invincibility Deactivated");
+        enableDoubleJump = enable;
+        canDoubleJump = enable;
     }
 }

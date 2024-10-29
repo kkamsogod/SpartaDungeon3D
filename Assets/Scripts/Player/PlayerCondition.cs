@@ -25,6 +25,8 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
     public event Action OnTakeDamage;
     public event Action OnWarmHeal;
 
+    private bool infiniteStamina = false;
+
     private void Update()
     {
         hunger.Subtract(hunger.passiveValue * Time.deltaTime);
@@ -32,7 +34,7 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
         cold.Subtract(cold.passiveValue * Time.deltaTime);
         stamina.Add(stamina.passiveValue * Time.deltaTime);
 
-        if (hunger.curValue == 0.0f | cold.curValue == 0.0f)
+        if (hunger.curValue == 0.0f || cold.curValue == 0.0f)
         {
             health.Subtract(NoHungerHealthDecay * Time.deltaTime);
         }
@@ -79,9 +81,14 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
         health.Subtract(damageAmount);
         OnTakeDamage?.Invoke();
     }
-    
+
     public bool UseStamina(float amount)
     {
+        if (infiniteStamina)
+        {
+            return true;
+        }
+
         if (stamina.curValue - amount < 0f)
         {
             return false;
@@ -89,5 +96,10 @@ public class PlayerCondition : MonoBehaviour, IDamagable, IWarmable
 
         stamina.Subtract(amount);
         return true;
+    }
+
+    public void EnableInfiniteStamina(bool enable)
+    {
+        infiniteStamina = enable;
     }
 }
