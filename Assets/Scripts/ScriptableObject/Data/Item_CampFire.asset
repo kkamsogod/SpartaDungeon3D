@@ -15,14 +15,11 @@ MonoBehaviour:
   displayName: "\uBAA8\uB2E5\uBD88"
   description: "\uB098\uBB34\uB85C \uB9CC\uB4E0 \uBAA8\uB2E5\uBD88\uC774\uB2E4. \uAC00\uAE4C\uC774
     \uAC00\uBA74 \uB530\uB73B\uD574\uC9C4\uB2E4."
-  type: 3
-  icon: {fileID: 21300000, guid: 0be65d09682ad2749972f71316c1a53a, type: 3}
+  type: 0
+  icon: {fileID: 0}
   dropPrefab: {fileID: 6752872650309459859, guid: 69b2a7edf6035994b93c7dae0c72eb47, type: 3}
   canStack: 1
   maxStackAmount: 10
   consumables: []
   equipPrefab: {fileID: 0}
-  isCraftable: 1
-  requiredMaterials:
-  - material: {fileID: 11400000, guid: 79f311b4f862e2c4fa587db8bc40045e, type: 2}
-    quantity: 5
+  toolType: 0

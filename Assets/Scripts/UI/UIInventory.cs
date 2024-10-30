@@ -105,7 +105,7 @@ public class UIInventory : MonoBehaviour
         return inventoryCanvas.activeInHierarchy;
     }
 
-    void AddItem()
+    public void AddItem()
     {
         ItemData data = CharacterManager.Instance.Player.itemData;
 
@@ -142,6 +142,44 @@ public class UIInventory : MonoBehaviour
 
         ThrowItem(data);
         CharacterManager.Instance.Player.itemData = null;
+    }
+
+    public void AddItem(ItemData data, int count)
+    {
+        if (data == null)
+        {
+            Debug.LogError("ItemData is null.");
+            return;
+        }
+
+        if (data.canStack)
+        {
+            ItemSlot slot = GetItemStack(data);
+            if (slot != null)
+            {
+                slot.quantity += count;
+                UpdateInventorySlots();
+                UpdateQuickSlots();
+                return;
+            }
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            ItemSlot emptySlot = GetEmptySlot();
+            if (emptySlot != null)
+            {
+                emptySlot.item = data;
+                emptySlot.quantity = 1;
+            }
+            else
+            {
+                ThrowItem(data);
+            }
+        }
+
+        UpdateInventorySlots();
+        UpdateQuickSlots();
     }
 
     void UpdateInventorySlots()

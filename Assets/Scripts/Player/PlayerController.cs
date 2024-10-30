@@ -53,7 +53,7 @@ public class PlayerController : MonoBehaviour
             {
                 isRunning = false;
             }
-        }
+        }        
     }
 
     private void FixedUpdate()
@@ -189,5 +189,5 @@ public class PlayerController : MonoBehaviour
     {
         enableDoubleJump = enable;
         canDoubleJump = enable;
-    }
+    }    
 }
