@@ -15,6 +15,10 @@ public class ItemEffectHandler : MonoBehaviour
     public GameObject doubleJumpEffectObject;
     public GameObject infiniteStaminaEffectObject;
 
+    private Coroutine speedBoostCoroutine;
+    private Coroutine doubleJumpCoroutine;
+    private Coroutine infiniteStaminaCoroutine;
+
     private void Start()
     {
         controller = CharacterManager.Instance.Player.controller;
@@ -27,17 +31,29 @@ public class ItemEffectHandler : MonoBehaviour
 
     public void StartSpeedBoost(float multiplier, float duration)
     {
-        StartCoroutine(ApplySpeedBoost(multiplier, duration));
+        if (speedBoostCoroutine != null)
+        {
+            StopCoroutine(speedBoostCoroutine);
+        }
+        speedBoostCoroutine = StartCoroutine(ApplySpeedBoost(multiplier, duration));
     }
 
     public void StartDoubleJump(float duration)
     {
-        StartCoroutine(ApplyDoubleJump(duration));
+        if (doubleJumpCoroutine != null)
+        {
+            StopCoroutine(doubleJumpCoroutine);
+        }
+        doubleJumpCoroutine = StartCoroutine(ApplyDoubleJump(duration));
     }
 
     public void StartInfiniteStamina(float duration)
     {
-        StartCoroutine(ApplyInfiniteStamina(duration));
+        if (infiniteStaminaCoroutine != null)
+        {
+            StopCoroutine(infiniteStaminaCoroutine);
+        }
+        infiniteStaminaCoroutine = StartCoroutine(ApplyInfiniteStamina(duration));
     }
 
     private IEnumerator ApplySpeedBoost(float speedMultiplier, float duration)
@@ -45,7 +61,6 @@ public class ItemEffectHandler : MonoBehaviour
         Debug.Log("Speed Boost Activated");
         controller.SetSpeedMultiplier(speedMultiplier);
 
-        // 이펙트 오브젝트 활성화
         if (speedBoostEffectObject != null)
             speedBoostEffectObject.SetActive(true);
 
@@ -53,11 +68,10 @@ public class ItemEffectHandler : MonoBehaviour
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
-            speedBoostImage.fillAmount = 1 - (elapsedTime / duration); // 지속 시간에 따른 fillAmount 업데이트
+            speedBoostImage.fillAmount = 1 - (elapsedTime / duration);
             yield return null;
         }
 
-        // 원래 속도로 복원 및 이펙트 오브젝트 비활성화
         controller.ResetSpeedMultiplier();
         speedBoostImage.fillAmount = 0;
 
@@ -65,6 +79,7 @@ public class ItemEffectHandler : MonoBehaviour
             speedBoostEffectObject.SetActive(false);
 
         Debug.Log("Speed Boost Deactivated");
+        speedBoostCoroutine = null;
     }
 
     private IEnumerator ApplyDoubleJump(float duration)
@@ -79,7 +94,7 @@ public class ItemEffectHandler : MonoBehaviour
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
-            doubleJumpImage.fillAmount = 1 - (elapsedTime / duration); // 지속 시간에 따른 fillAmount 업데이트
+            doubleJumpImage.fillAmount = 1 - (elapsedTime / duration);
             yield return null;
         }
 
@@ -90,6 +105,7 @@ public class ItemEffectHandler : MonoBehaviour
             doubleJumpEffectObject.SetActive(false);
 
         Debug.Log("Double Jump Deactivated");
+        doubleJumpCoroutine = null;
     }
 
     private IEnumerator ApplyInfiniteStamina(float duration)
@@ -104,7 +120,7 @@ public class ItemEffectHandler : MonoBehaviour
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
-            infiniteStaminaImage.fillAmount = 1 - (elapsedTime / duration); // 지속 시간에 따른 fillAmount 업데이트
+            infiniteStaminaImage.fillAmount = 1 - (elapsedTime / duration);
             yield return null;
         }
 
@@ -115,5 +131,6 @@ public class ItemEffectHandler : MonoBehaviour
             infiniteStaminaEffectObject.SetActive(false);
 
         Debug.Log("Infinite Stamina Deactivated");
+        infiniteStaminaCoroutine = null;
     }
 }

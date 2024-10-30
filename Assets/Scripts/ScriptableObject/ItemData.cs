@@ -3,6 +3,7 @@ using System;
 
 public enum ItemType
 {
+    None,
     Resource,
     Equipable,
     Consumable

@@ -14,12 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: "\uC7A5\uC791"
   description: "\uB098\uBB34\uC5D0\uC11C \uD68D\uB4DD \uD560 \uC218 \uC788\uB2E4."
-  type: 0
+  type: 1
   icon: {fileID: 21300000, guid: dc0fca46d9b637347a14d1ad7e607446, type: 3}
   dropPrefab: {fileID: 2186233867898330396, guid: ed963cc86321d724d9b5d2f3132a92d5, type: 3}
   canStack: 1
-  maxStackAmount: 20
+  maxStackAmount: 99
   consumables: []
   equipPrefab: {fileID: 0}
-  isCraftable: 0
-  requiredMaterials: []
+  toolType: 0
